@@ -1,0 +1,199 @@
+package com.mopaas_mobile.fragment;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import android.app.ProgressDialog;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.adapter.SvcListAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.SerVice;
+import com.mopaas_mobile.swipemenulistview.SwipeMenu;
+import com.mopaas_mobile.swipemenulistview.SwipeMenuCreator;
+import com.mopaas_mobile.swipemenulistview.SwipeMenuItem;
+import com.mopaas_mobile.swipemenulistview.SwipeMenuListView;
+import com.mopaas_mobile.swipemenulistview.SwipeMenuListView.OnMenuItemClickListener;
+
+public class ServiceListFragment extends Fragment {
+
+	private SharedPreferences cashedata; 
+	private String token;
+	private String spaceGuid,orgGuid;
+	private String usedMemory;
+	private String totalMemory;
+	private TextView memoryTxt;
+	private ProgressBar memorybar;
+	private SwipeMenuListView svcListView;
+	private SvcListAdapter adapter; 
+	private ArrayList<SerVice> svclist; 
+	private ProgressDialog dialog = null;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View contentview = inflater.inflate(R.layout.fragment_servicelist, container,false);
+		return contentview;
+	}
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		initView();
+		GetListTask task = new GetListTask();
+		task.execute(token,spaceGuid);
+	}
+	@Override
+	public void onResume() {
+		super.onResume();
+		totalMemory = cashedata.getString("memoryLimit", "0");
+		usedMemory = cashedata.getString("usedMemory", "0");
+		memoryTxt.setText(usedMemory+"M/"+totalMemory+"M");
+		memorybar.setProgress(((100*Integer.valueOf(usedMemory))/Integer.valueOf(totalMemory)));
+	}
+	private void initView()
+	{
+		memoryTxt = (TextView)getActivity().findViewById(R.id.svcmemoryinfo);
+		memorybar = (ProgressBar)getActivity().findViewById(R.id.svcmemorybar);
+		svcListView = (SwipeMenuListView)getActivity().findViewById(R.id.svclistview);
+		cashedata = getActivity().getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", "");
+		spaceGuid = cashedata.getString("spaceGuid", "");
+		orgGuid = cashedata.getString("orgGuid", "");
+		
+		// step 1. create a MenuCreator
+		SwipeMenuCreator creator = new SwipeMenuCreator() {
+			@Override
+			public void create(SwipeMenu menu) {
+				// create "delete" item
+				SwipeMenuItem deleteItem = new SwipeMenuItem(
+					getActivity());
+					// set item background
+					deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,0x3F, 0x25)));
+					// set item width
+					deleteItem.setWidth(dp2px(90));
+					// set a icon
+					deleteItem.setIcon(R.drawable.ic_delete);
+					// add to menu
+					menu.addMenuItem(deleteItem);
+					}
+				};
+				// set creator
+				svcListView.setMenuCreator(creator);
+
+				// step 2. listener item click event
+				svcListView.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+					@Override
+					public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+						switch (index) {
+						case 0:
+							notifyListData(position,svclist.get(position).name);
+							break;
+						}
+						return false;
+					}
+				});
+	}
+	public void notifyListData(int itemPosition,String itemName)
+	{
+		DeleteSvcTask task = new DeleteSvcTask();
+		task.execute(token,spaceGuid,itemName,orgGuid,String.valueOf(itemPosition));
+	}
+	private int dp2px(int dp) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+				getResources().getDisplayMetrics());
+	}
+	class GetListTask extends AsyncTask<String,String,Map<String,Object>>
+	{
+
+		@Override
+		protected Map<String,Object> doInBackground(String... params) {
+			try {
+				return MPSbackendApi.getServiceList(params[0], params[1]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String,Object> result) {
+			super.onPostExecute(result);
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					svclist = (ArrayList<SerVice>)result.get("list");
+					if(adapter==null)
+					{
+						adapter = new SvcListAdapter(ServiceListFragment.this, svclist);
+						svcListView.setAdapter(adapter);
+					}else
+						adapter.notifyDataSetChanged();
+				}
+			}
+		}
+	}
+	class DeleteSvcTask extends AsyncTask<String,String,Map<String,String>>
+	{
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			dialog = new ProgressDialog(getActivity());
+			dialog.setMessage(getResources().getString(R.string.loadingdelete));
+			dialog.setCancelable(true);
+			dialog.show();
+		}
+		@Override
+		protected Map<String, String> doInBackground(String... params) {
+			Map<String, String> resultMap;
+			try {
+				resultMap = MPSbackendApi.deleteService(params[0], params[1], params[2], params[3]);
+				resultMap.put("position", params[4]);
+				return resultMap;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@Override
+		protected void onPostExecute(Map<String, String> result) {
+			super.onPostExecute(result);
+			if (dialog.isShowing() && !getActivity().isFinishing() && getActivity() != null)
+				dialog.dismiss();
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					svclist.remove(Integer.parseInt(result.get("position")));
+					adapter.notifyDataSetChanged();
+				}
+				Toast.makeText(getActivity(),result.get("returnMessage") , Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+}

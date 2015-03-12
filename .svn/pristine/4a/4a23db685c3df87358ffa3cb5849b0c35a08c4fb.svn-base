@@ -1,0 +1,530 @@
+package com.mopaas_mobile.activity;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.mopaas_mobile.adapter.InstancelistAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.AppLication;
+import com.mopaas_mobile.domain.Instance;
+
+
+public class AppDetailActivity extends Activity implements OnClickListener{
+
+	ListView instancelistview;
+	List<Instance> instancelist;
+	SharedPreferences cashedata;
+	String token,appid,appname,appurl,appmemory,appimage,appstate,
+			memoryCount,dailyQuantity,weeklyQuantity,spaceGuid,orgGuid;
+	InstancelistAdapter adapter;
+	ImageView appIcon;
+	TextView appnameTxt,appurlTxt,appmemoryTxt,instancememtxt,instnumbertxt,memorysetup_txt,
+			norunningtxt,titlebartxt,dailyvisitquality_txt,weeklyvisitquality_txt;
+	Button upmemory,downmemory,upnumber,downnumber,savebtn,cancelbtn,logoutsubmitbtn,logoutcancelbtn;
+	ImageButton setupbtn,appbutton,backbtn;
+	ProgressBar instnumberbar,instmemorybar;
+	Dialog setupdialog;
+	AppLication app;
+	private ProgressDialog dialog = null;
+	final static int unitcount = 128;
+	int itemid,instmemoryMax,instnumberMax,currentMemory,
+		currentNumber;
+	int unchangeMemory,unchangeNumber;
+	
+	boolean setupchanged = false;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		setContentView(R.layout.activity_appdetail);
+		
+		cashedata = getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", null);
+		orgGuid = cashedata.getString("orgGuid", null);
+		spaceGuid = cashedata.getString("spaceGuid", null);
+		Intent dtlint = getIntent();
+		itemid = dtlint.getIntExtra("itemid",-1);
+		appid = dtlint.getStringExtra("appId");
+		appname = dtlint.getStringExtra("appName");
+		appurl = dtlint.getStringExtra("appuris");
+		appimage = dtlint.getStringExtra("appImage");
+		appmemory = dtlint.getStringExtra("appMemory");
+		appstate = dtlint.getStringExtra("appState");
+		memoryCount = dtlint.getStringExtra("totalMemory");
+		currentNumber =  Integer.valueOf(dtlint.getStringExtra("instanceNum"));
+		
+		instanceListTask task = new instanceListTask();
+		task.execute(token,appname,spaceGuid,orgGuid);
+		initView();
+		initDialog();
+	}
+	public void initDialog()
+	{
+		LayoutInflater inflater = getLayoutInflater();
+		View dialogView = inflater.inflate(R.layout.window_dialog,null);
+		upmemory = (Button)dialogView.findViewById(R.id.upmemory);
+		downmemory = (Button)dialogView.findViewById(R.id.downmemory);
+		upnumber = (Button)dialogView.findViewById(R.id.upnumber);
+		downnumber = (Button)dialogView.findViewById(R.id.downnumber);
+		savebtn =(Button)dialogView.findViewById(R.id.savebtn);
+		cancelbtn = (Button)dialogView.findViewById(R.id.cancelbtn);
+		instnumberbar = (ProgressBar)dialogView.findViewById(R.id.instnumberbar);
+		instmemorybar = (ProgressBar)dialogView.findViewById(R.id.instmemorybar);
+		instancememtxt = (TextView)dialogView.findViewById(R.id.instancememtxt);
+		instnumbertxt = (TextView)dialogView.findViewById(R.id.instnumbertxt);		
+		unchangeNumber = currentNumber;		
+		currentMemory = Integer.valueOf(appmemory);
+		
+		instmemoryMax = Integer.valueOf(memoryCount);
+		instnumberMax = instmemoryMax/currentMemory;
+		String str1 = getResources().getString(R.string.instancemem)+"("+currentMemory+"M/"+memoryCount+"M)";
+		SpannableStringBuilder style1=new SpannableStringBuilder(str1);   
+        style1.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str1.indexOf("(")+1,str1.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        instancememtxt.setText(style1);
+        String str2 = getResources().getString(R.string.instnumber)+"("+currentNumber+"/"+instnumberMax+")";
+		SpannableStringBuilder style2=new SpannableStringBuilder(str2);   
+        style2.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str2.indexOf("(")+1,str2.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        instnumbertxt.setText(style2);
+
+		instmemorybar.setProgress(instmemoryMax>0?(currentMemory*100/instmemoryMax):0);
+		instnumberbar.setProgress(instnumberMax>0?(currentNumber*100/instnumberMax):0);
+		
+		upmemory.setOnClickListener(this);
+		downmemory.setOnClickListener(this);
+		upnumber.setOnClickListener(this);
+		downnumber.setOnClickListener(this);
+		savebtn.setOnClickListener(this);
+		cancelbtn.setOnClickListener(this);
+		setupdialog = new Dialog(this, R.style.dialog);
+		setupdialog.setContentView(dialogView);
+		setupdialog.setCancelable(true);
+		
+	}
+	public void initView()
+	{
+		appurlTxt = (TextView)findViewById(R.id.appurl);
+		appIcon = (ImageView)findViewById(R.id.appicon);
+		appbutton = (ImageButton)findViewById(R.id.appbutton);
+		appnameTxt = (TextView)findViewById(R.id.appname);
+		appmemoryTxt = (TextView)findViewById(R.id.memorychart_txt);
+		backbtn = (ImageButton)findViewById(R.id.backbtn);
+		dailyvisitquality_txt = (TextView)findViewById(R.id.dailyvisitquality_txt);
+		weeklyvisitquality_txt = (TextView)findViewById(R.id.weeklyvisitquality_txt);
+		memorysetup_txt = (TextView)findViewById(R.id.memorysetup_txt);
+		instancelistview = (ListView)findViewById(R.id.instancelist);
+		norunningtxt = (TextView)findViewById(R.id.norunningtxt);
+		norunningtxt.setVisibility(View.INVISIBLE);
+		titlebartxt = (TextView)findViewById(R.id.titletxt);
+		titlebartxt.setText(" "+getResources().getString(R.string.appdetail));
+		appurlTxt.setText(appurl);
+		appnameTxt.setText(appname);
+		SpannableStringBuilder style=new SpannableStringBuilder(appmemory+"M/"+memoryCount+"M");   
+        style.setSpan(new ForegroundColorSpan(Color.argb(255, 22, 141, 226)),0,appmemory.length()+1,Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        appmemoryTxt.setText(style);
+		appIcon.setBackgroundResource(getSwitchIcon(appimage));
+		if(appstate.contains("STOP"))
+			appbutton.setBackgroundResource(R.drawable.icon_off);
+		else 
+			appbutton.setBackgroundResource(R.drawable.icon_on);
+		appbutton.setOnClickListener(this);
+		titlebartxt.setOnClickListener(this);
+		memorysetup_txt.setOnClickListener(this);
+		backbtn.setOnClickListener(this);
+	}
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		 
+        if (keyCode == KeyEvent.KEYCODE_BACK
+                 && event.getRepeatCount() == 0&&itemid!=-1) {
+        	if(setupchanged)appmemory = String.valueOf(currentMemory*currentNumber);
+        	Intent data=new Intent();  
+        	data.putExtra("itemid",itemid);
+            data.putExtra("state",appstate);  
+            data.putExtra("memory",appmemory);
+            data.putExtra("instancenum",setupchanged?currentNumber:unchangeNumber);
+            setResult(20, data);  
+            finish();
+            return true;
+         }
+         return super.onKeyDown(keyCode, event);
+     }
+	@Override
+	public void onClick(View v) {
+		
+		switch(v.getId())
+		{
+			case R.id.backbtn:
+				if(setupchanged)appmemory = String.valueOf(currentMemory*currentNumber);
+				Intent backdata=new Intent();  
+				backdata.putExtra("itemid",itemid);
+				backdata.putExtra("state",appstate);  
+				backdata.putExtra("memory",appmemory);
+				backdata.putExtra("instancenum",setupchanged?currentNumber:unchangeNumber); 
+	            setResult(20, backdata);  
+	            finish();
+				break;
+			case R.id.appbutton:
+				AppOnOffTask task = new AppOnOffTask();
+				if(appstate.contains("START"))
+					task.execute("stop",token,appname,spaceGuid,orgGuid);
+				else
+					task.execute("start",token,appname,spaceGuid,orgGuid);
+				break;
+			case R.id.memorysetup_txt:
+				setupchanged = false;
+				setupdialog.show();
+				break;
+			case R.id.savebtn:
+				setupdialog.dismiss();
+				unchangeMemory = currentMemory;
+				unchangeNumber = currentNumber;
+				setupchanged = true;
+				addinstTask saveTask = new addinstTask();
+				saveTask.execute(token,appname,spaceGuid,orgGuid,
+								 String.valueOf(currentNumber),
+								 String.valueOf(currentMemory));
+				break;
+			case R.id.cancelbtn:
+				setupdialog.dismiss();
+				break;
+			case R.id.upmemory:
+				if(currentMemory+unitcount <= instmemoryMax && (currentMemory+unitcount)*currentNumber <= instmemoryMax)
+				{
+					currentMemory = currentMemory+unitcount;
+					int progress1 = currentMemory*100/instmemoryMax;
+					instmemorybar.setProgress(progress1);
+					if(currentMemory<=instmemoryMax)
+					{
+						String str = getResources().getString(R.string.instancemem)+"("+currentMemory+"M/"+memoryCount+"M)";
+						SpannableStringBuilder style=new SpannableStringBuilder(str);   
+				        style.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str.indexOf("(")+1,str.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+				        instancememtxt.setText(style);
+					}
+				}
+				break;
+			case R.id.downmemory:
+				if(instmemoryMax>0)
+				{
+					if("app-type-a03.png".equals(appimage)||"app-type-a05.png".equals(appimage))
+					{
+						if((currentMemory-unitcount) > unitcount*2)
+						{
+							currentMemory = currentMemory-unitcount;
+							int progress2 = currentMemory*100/instmemoryMax;
+							instmemorybar.setProgress(progress2);
+							String str = getResources().getString(R.string.instancemem)+"("+currentMemory+"M/"+memoryCount+"M)";
+							SpannableStringBuilder style=new SpannableStringBuilder(str);   
+					        style.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str.indexOf("(")+1,str.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+					        instancememtxt.setText(style);
+						}	
+					}else
+					{
+						if((currentMemory-unitcount) > unitcount)
+						{
+							currentMemory = currentMemory-unitcount;
+							int progress2 = currentMemory*100/instmemoryMax;
+							instmemorybar.setProgress(progress2);
+							String str = getResources().getString(R.string.instancemem)+"("+currentMemory+"M/"+memoryCount+"M)";
+							SpannableStringBuilder style=new SpannableStringBuilder(str);   
+					        style.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str.indexOf("(")+1,str.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+					        instancememtxt.setText(style);
+						}
+					}
+				}
+				break;
+			case R.id.upnumber:
+				if(currentNumber < instnumberMax && currentMemory*(currentNumber+1) <= instmemoryMax)
+				{
+					currentNumber = currentNumber+1;
+					String str = getResources().getString(R.string.instnumber)+"("+currentNumber+"/"+instnumberMax+")";
+					SpannableStringBuilder style=new SpannableStringBuilder(str);   
+			        style.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str.indexOf("(")+1,str.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+			        instnumbertxt.setText(style);
+					int progress3 = currentNumber*100/instnumberMax;
+					instnumberbar.setProgress(progress3);
+				}
+				break;
+			case R.id.downnumber:
+				if(currentNumber>1&&instnumberMax>0&&instmemoryMax>0)
+				{
+					currentNumber = currentNumber-1;
+					int progress4 = currentNumber*100/instnumberMax;
+					instnumberbar.setProgress(progress4);
+					String str = getResources().getString(R.string.instnumber)+"("+currentNumber+"/"+instnumberMax+")";
+					SpannableStringBuilder style=new SpannableStringBuilder(str);   
+			        style.setSpan(new ForegroundColorSpan(Color.argb(255, 18, 128, 206)),str.indexOf("(")+1,str.indexOf("/"),Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+			        instnumbertxt.setText(style);
+				}
+				break;
+		}
+		
+	}
+	private int getSwitchIcon(String buildpack)
+	{
+			if("go".equals(buildpack))return R.drawable.go;
+			if("java".equals(buildpack))return R.drawable.java;
+			if("jboss".equals(buildpack))return R.drawable.jboss;
+			if("jenkins".equals(buildpack))return R.drawable.jenkins;
+			if("nodejs".equals(buildpack))return R.drawable.nodejs;
+			if("php".equals(buildpack))return R.drawable.php;
+			if("python".equals(buildpack))return R.drawable.python;
+			if("ruby".equals(buildpack))return R.drawable.ruby;
+			return R.drawable.tomcat;
+	}
+	class CountChartTask  extends AsyncTask<String,Integer,String>
+	{
+		String returnCode;
+		@Override
+		protected String doInBackground(String... params) {
+			Map<String, String> resultmap1 = null;
+			Map<String, String> resultmap2 = null;
+			String resultStr = null;
+			try {
+				resultmap1 = MPSbackendApi.requestCountChart(params[0], params[1]);
+				returnCode = resultmap1.get("code");
+				if(returnCode.equals("000"))
+				{
+					dailyQuantity = resultmap1.get("visitQuantity");
+					resultmap2 = MPSbackendApi.requestCountChart(params[0], params[2]);
+					returnCode = resultmap2.get("code");
+					if(returnCode.equals("000"))
+					{
+						weeklyQuantity = resultmap2.get("visitQuantity");
+					}else
+					{
+						returnCode = "-3";
+						resultStr = getResources().getString(R.string.dataexception);
+					} 
+					resultStr = "OK";
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				returnCode = "-1";
+				resultStr = getResources().getString(R.string.ioexception);
+			} catch (JSONException e) {
+				e.printStackTrace();
+				returnCode = "-2";
+				resultStr = getResources().getString(R.string.jsonexception);
+			}
+			
+			return resultStr;
+		}
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			if(returnCode.equals("000"))
+			{
+				dailyvisitquality_txt.setText(dailyQuantity);
+				weeklyvisitquality_txt.setText(weeklyQuantity);
+				SpannableStringBuilder style=new SpannableStringBuilder(appmemory+"M/"+memoryCount+"M");   
+		        style.setSpan(new ForegroundColorSpan(Color.argb(255, 22, 141, 226)),0,appmemory.length()+1,Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+		        appmemoryTxt.setText(style);
+			}		
+			else
+				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+		}
+	}
+	class instanceListTask extends AsyncTask<String,Integer,Map<String,Object>>
+	{
+		String returnCode;
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			dialog = new ProgressDialog(AppDetailActivity.this);
+			dialog.setMessage(getResources().getString(R.string.loadinginstance));
+			dialog.setCancelable(true);
+			dialog.show();
+		}
+		@Override
+		protected Map<String, Object> doInBackground(String... params) {
+			Map<String,Object> resultmap = new HashMap<String, Object>();
+			try {
+				resultmap = MPSbackendApi.getInstance(params[0], params[1],params[2],params[3]);
+				returnCode = (String)resultmap.get("returnCode");
+				if(returnCode.equals("000"))return resultmap;
+			} catch (IOException e) {
+				e.printStackTrace();
+				returnCode = "-1";
+			} catch (JSONException e) {
+				e.printStackTrace(); 
+				returnCode = "-1";
+			}
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String, Object> resultmap) {
+			super.onPostExecute(resultmap);
+			if (dialog.isShowing() && !AppDetailActivity.this.isFinishing()
+					&& AppDetailActivity.this != null)
+				dialog.dismiss();
+			if(resultmap!=null)
+			{
+				instancelist = (ArrayList<Instance>)resultmap.get("instances");
+				if(instancelist!=null&&instancelist.size()>0)
+				{	
+					adapter = new InstancelistAdapter(AppDetailActivity.this, instancelist);
+					instancelistview.setAdapter(adapter);	
+					instancelistview.setVisibility(View.VISIBLE);
+					norunningtxt.setVisibility(View.INVISIBLE);
+				}else
+				{
+					instancelistview.setVisibility(View.INVISIBLE);
+					norunningtxt.setVisibility(View.VISIBLE);
+				}
+			}
+		}
+	}
+	class addinstTask extends AsyncTask<String,Integer,String>
+	{
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			dialog = new ProgressDialog(AppDetailActivity.this);
+			dialog.setMessage(getResources().getString(R.string.savingsetup));
+			dialog.setCancelable(true);
+			dialog.show();
+		}
+		@Override
+		protected String doInBackground(String... params) {
+			Map<String, String> resultmap = null;
+			String returnCode=null;
+			try {
+				resultmap = MPSbackendApi.modifyApp(params[0], params[1],params[2],params[3],params[4],params[5]);
+				returnCode = resultmap.get("returnCode");
+			} catch (IOException e) {
+				e.printStackTrace();
+				returnCode = "-1";
+			} catch (JSONException e) {
+				e.printStackTrace();
+				returnCode = "-2";
+			}
+			return returnCode;
+		}
+		@Override
+		protected void onPostExecute(String returnCode) {
+			super.onPostExecute(returnCode);
+			if (dialog.isShowing() && !AppDetailActivity.this.isFinishing()
+					&& AppDetailActivity.this != null)
+				dialog.dismiss();
+			if(returnCode.equals("000"))
+			{	
+				appmemory = String.valueOf(currentMemory * currentNumber);
+				SpannableStringBuilder style=new SpannableStringBuilder(appmemory+"M/"+memoryCount+"M");   
+		        style.setSpan(new ForegroundColorSpan(Color.argb(255, 22, 141, 226)),0,appmemory.length()+1,Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+		        appmemoryTxt.setText(style);
+				instanceListTask listask = new instanceListTask();
+				listask.execute(token,appname,spaceGuid,orgGuid);
+			}else
+			{
+				Toast.makeText(getApplicationContext(), R.string.dataexception, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+	class AppOnOffTask extends AsyncTask<String,Integer,String>
+	{
+		String returnCode;
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			dialog = new ProgressDialog(AppDetailActivity.this);
+			if(appstate.contains("STOP"))
+				dialog.setMessage(getResources().getString(R.string.doing_turnon));
+			else
+				dialog.setMessage(getResources().getString(R.string.doing_turnoff));
+			dialog.setCancelable(true);
+			dialog.show();
+			super.onPreExecute();
+		}
+		@Override
+		protected String doInBackground(String... params) {
+			if("start".equals(params[0]))
+			{
+				try {
+					Map<String,String> valuesmap = MPSbackendApi.startApp(params[1], params[2],params[3],params[4]);
+					returnCode = valuesmap.get("returnCode");
+					String returnMessage = valuesmap.get("returnMessage");
+					return returnMessage;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return getResources().getString(R.string.ioexception);
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return getResources().getString(R.string.jsonexception);
+				}
+			}else
+			{
+				try {
+					Map<String,String> valuesmap = MPSbackendApi.stopApp(params[1], params[2],params[3],params[4]);
+					returnCode = valuesmap.get("returnCode");
+					String returnMessage = valuesmap.get("returnMessage");
+					return returnMessage;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return getResources().getString(R.string.ioexception);
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return getResources().getString(R.string.jsonexception);
+				}
+			}
+		}
+		@Override
+		protected void onPostExecute(String returnMessage) {
+			super.onPostExecute(returnMessage);
+			if (dialog.isShowing() && !AppDetailActivity.this.isFinishing()
+					&& AppDetailActivity.this != null)
+				dialog.dismiss();
+			if(returnCode.equals("000"))
+			{
+				if(appstate.contains("STOP"))
+					appstate = "STARTED";
+				else
+					appstate = "STOPPED";
+				if(appstate.contains("START"))
+					appbutton.setBackgroundResource(R.drawable.switchon);
+				else
+					appbutton.setBackgroundResource(R.drawable.switcoff);
+				instanceListTask intlist = new instanceListTask();
+				intlist.execute(token,appname,spaceGuid,orgGuid);
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.turn_on_success), Toast.LENGTH_LONG).show();
+			}else
+			{
+				if(appstate.contains("START"))
+					appbutton.setBackgroundResource(R.drawable.switchon);
+				else
+					appbutton.setBackgroundResource(R.drawable.switcoff);
+				Toast.makeText(getApplicationContext(), returnMessage, Toast.LENGTH_LONG).show();
+			}
+		}
+		
+	}
+}

@@ -1,0 +1,142 @@
+package com.mopaas_mobile.fragment;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.adapter.SvcListAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.SerVice;
+
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class ServiceListFragment extends Fragment {
+
+	private SharedPreferences cashedata; 
+	private String token;
+	private String spaceGuid,orgGuid;
+	private String usedMemory;
+	private String totalMemory;
+	private TextView memoryTxt;
+	private ProgressBar memorybar;
+	private ListView svcListView;
+	private SvcListAdapter adapter; 
+	private ArrayList<SerVice> svclist; 
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View contentview = inflater.inflate(R.layout.fragment_servicelist, container,false);
+		return contentview;
+	}
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		initView();
+		GetListTask task = new GetListTask();
+		task.execute(token,spaceGuid);
+	}
+	
+	private void initView()
+	{
+		memoryTxt = (TextView)getActivity().findViewById(R.id.svcmemoryinfo);
+		memorybar = (ProgressBar)getActivity().findViewById(R.id.svcmemorybar);
+		svcListView = (ListView)getActivity().findViewById(R.id.svclistview);
+		cashedata = getActivity().getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", "");
+		spaceGuid = cashedata.getString("spaceGuid", "");
+		orgGuid = cashedata.getString("orgGuid", "");
+		totalMemory = cashedata.getString("memoryLimit", "0");
+		usedMemory = cashedata.getString("usedMemory", "0");
+		memoryTxt.setText(usedMemory+"M/"+totalMemory+"M");
+		memorybar.setProgress(((100*Integer.valueOf(usedMemory))/Integer.valueOf(totalMemory)));
+		
+	}
+	public void notifyListData(int itemPosition,String itemName)
+	{
+		DeleteSvcTask task = new DeleteSvcTask();
+		task.execute(token,spaceGuid,itemName,orgGuid,String.valueOf(itemPosition));
+	}
+	class GetListTask extends AsyncTask<String,String,Map<String,Object>>
+	{
+
+		@Override
+		protected Map<String,Object> doInBackground(String... params) {
+			try {
+				return MPSbackendApi.getServiceList(params[0], params[1]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String,Object> result) {
+			super.onPostExecute(result);
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					svclist = (ArrayList<SerVice>)result.get("list");
+					if(adapter==null)
+					{
+						adapter = new SvcListAdapter(ServiceListFragment.this, svclist);
+						svcListView.setAdapter(adapter);
+					}else
+						adapter.notifyDataSetChanged();
+				}
+			}
+		}
+	}
+	class DeleteSvcTask extends AsyncTask<String,String,Map<String,String>>
+	{
+		@Override
+		protected Map<String, String> doInBackground(String... params) {
+			Map<String, String> resultMap;
+			try {
+				resultMap = MPSbackendApi.deleteService(params[0], params[1], params[2], params[3]);
+				resultMap.put("position", params[4]);
+				return resultMap;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@Override
+		protected void onPostExecute(Map<String, String> result) {
+			super.onPostExecute(result);
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					svclist.remove(Integer.parseInt(result.get("position")));
+					adapter.notifyDataSetChanged();
+				}
+				Toast.makeText(getActivity(),result.get("returnMessage") , Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+}

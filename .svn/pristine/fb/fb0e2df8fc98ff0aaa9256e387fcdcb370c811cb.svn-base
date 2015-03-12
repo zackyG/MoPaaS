@@ -1,0 +1,90 @@
+package com.mopaas_mobile.adapter;
+
+import java.util.List;
+
+import com.mopaas_mobile.activity.AppDetailActivity;
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.domain.Instance;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+public class InstancelistAdapter extends BaseAdapter{
+
+	List<Instance> instancelist;
+	LayoutInflater inflate;
+	AppDetailActivity activity;
+	
+	public InstancelistAdapter(AppDetailActivity activity,List<Instance> instancelist)
+	{
+		this.instancelist = instancelist;
+		this.activity = activity;
+		inflate = LayoutInflater.from(activity.getApplicationContext());
+	}
+	@Override
+	public int getCount() {
+		if(instancelist==null)
+			return 0;
+		return instancelist.size();
+	}
+
+	@Override
+	public Object getItem(int arg0) {
+		return instancelist.get(arg0);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return position;
+	}
+	@Override
+	public boolean isEnabled(int position) {
+		return false;
+	}
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		Instance inst = instancelist.get(position);
+		ViewHolder holder = null;
+		if(convertView == null || convertView.getTag() == null)
+		{
+			holder = new ViewHolder();
+			convertView = inflate.inflate(R.layout.container_instance, null);
+			holder.instancenum_txt = (TextView)convertView.findViewById(R.id.instancenum_txt);
+			holder.state_txt = (TextView)convertView.findViewById(R.id.state_txt);
+			holder.time_txt = (TextView)convertView.findViewById(R.id.time_txt);
+			holder.cpu_txt = (TextView)convertView.findViewById(R.id.cpu_txt);
+			holder.memory_txt = (TextView)convertView.findViewById(R.id.memory_txt);
+			holder.disk_txt = (TextView)convertView.findViewById(R.id.disk_txt);
+			convertView.setTag(holder);
+		}else
+		{
+			holder = (ViewHolder)convertView.getTag();
+			holder.instancenum_txt.setText("");
+			holder.state_txt.setText("");
+			holder.time_txt.setText("");
+			holder.cpu_txt.setText("");
+			holder.memory_txt.setText("");
+			holder.disk_txt.setText("");
+		}
+		holder.instancenum_txt.setText(inst.instanceID);
+		holder.state_txt.setText(inst.state);
+		holder.time_txt.setText(inst.time);
+		holder.cpu_txt.setText(inst.stateCpu==null?activity.getResources().getString(R.string.unkown):inst.stateCpu);
+		holder.memory_txt.setText(inst.mems==null?activity.getResources().getString(R.string.unkown):inst.mems);
+		holder.disk_txt.setText(inst.disk==null?activity.getResources().getString(R.string.unkown):inst.disk);
+		return convertView;
+	}
+	class ViewHolder
+	{
+		TextView instancenum_txt;
+		TextView state_txt;
+		TextView time_txt;
+		TextView cpu_txt;
+		TextView memory_txt;
+		TextView disk_txt;
+	}
+	
+}

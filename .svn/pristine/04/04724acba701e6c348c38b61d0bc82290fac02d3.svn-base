@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?><RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/white" >
+    <RelativeLayout
+        android:id="@+id/titlebar" android:background="#0d86dd"
+        android:layout_width="fill_parent" android:layout_height="48dip" >
+	    <TextView
+	        android:id="@+id/titletxt" android:layout_centerInParent="true"
+	        android:layout_width="wrap_content" android:layout_height="wrap_content"
+	        android:textColor="@color/white" android:textSize="20sp" />
+	    <ImageButton
+	        android:id="@+id/backbtn" android:background="@drawable/icon_back"
+	        android:layout_centerVertical="true" android:layout_alignParentLeft="true"
+	        android:layout_width="44dip"	android:layout_height="44dip"/>
+    </RelativeLayout>
+    <ImageButton
+	    android:id="@+id/appbutton"
+	    android:layout_width="76dip" android:layout_height="38dip"
+	    android:layout_alignParentRight="true" android:layout_marginTop="12dip" android:layout_marginRight="12dip"
+	    android:layout_below="@+id/titlebar" android:background="@drawable/icon_off" />
+    <RelativeLayout
+        android:id="@+id/appinfolayout" android:layout_marginTop="18dip" 
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/appbutton" android:layout_below="@+id/titlebar" 
+        android:layout_alignParentLeft="true" android:layout_marginLeft="12dip" >
+	    <ImageView
+	        android:id="@+id/appicon" 
+	        android:layout_width="80dip" android:layout_height="80dip"
+	        android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+		<TextView
+		    android:id="@+id/appname"
+		    android:layout_width="wrap_content" android:layout_height="wrap_content"
+		    android:layout_marginLeft="10dip" android:textStyle="bold" android:textSize="25sp"
+		    android:layout_toRightOf="@+id/appicon" android:layout_alignTop="@+id/appicon"
+		    />
+		<TextView
+		    android:id="@+id/appurl" android:singleLine="true"
+		    android:layout_width="wrap_content" android:layout_height="wrap_content" 
+		    android:layout_marginLeft="10dip" android:layout_marginTop="7dip"
+		    android:layout_toRightOf="@+id/appicon" android:layout_below="@+id/appname"
+		    android:autoLink="web" android:textSize="18sp" android:textColor="#168DE2" />
+	</RelativeLayout>
+	<View
+	    android:id="@+id/divideview" android:layout_width="fill_parent"
+	    android:layout_height="0.5dip" android:layout_marginTop="5dip"
+	    android:background="#8F8F8F" android:layout_below="@+id/appinfolayout" />
+
+	<TableLayout
+	    android:id="@+id/memorylayout"
+	    android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:layout_marginLeft="5dip" android:layout_marginRight="5dip"
+		android:stretchColumns="0,2,4"
+		android:layout_below="@+id/divideview">
+		<TableRow
+		    android:layout_width="fill_parent" android:layout_height="fill_parent">
+		    <TextView
+		        android:id="@+id/dailyvisitquality_txt" android:gravity="center"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content"
+		        android:textColor="#168DE2" android:textSize="16sp" android:layout_marginTop="10dip"/>
+		    <View
+		        android:layout_width="0.5dip" android:layout_height="fill_parent" android:background="#8F8F8F"/>
+		    <TextView
+		        android:id="@+id/weeklyvisitquality_txt" android:gravity="center"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content"
+		        android:textColor="#168DE2" android:textSize="16sp" android:layout_marginTop="10dip"/>
+		    <View
+		        android:layout_width="0.5dip" android:layout_height="fill_parent" android:background="#8F8F8F"/>
+		    <TextView
+		        android:id="@+id/memorychart_txt" android:gravity="center"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content"
+		        android:textSize="16sp" android:layout_marginTop="10dip"/>
+		</TableRow>
+		<TableRow
+		    android:layout_width="fill_parent" android:layout_height="fill_parent">
+		    <TextView
+		        android:text="@string/dailyvisitquality" android:gravity="center"
+		        android:textColor="#8F8F8F" android:textSize="12sp" android:paddingBottom="10dip"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+		    <View
+		        android:layout_width="0.5dip" android:layout_height="fill_parent" android:background="#8F8F8F"/>
+		    <TextView
+		        android:text="@string/weeklyvisitquality" android:gravity="center" 
+		        android:textColor="#8F8F8F" android:textSize="12sp" android:paddingBottom="10dip"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+		    <View
+		        android:layout_width="0.5dip" android:layout_height="fill_parent" android:background="#8F8F8F"/>
+		    <TextView
+		        android:id="@+id/memorysetup_txt" android:gravity="center" android:paddingBottom="10dip"
+		        android:layout_width="wrap_content" android:layout_height="wrap_content" 
+		        android:text="@string/appmemorysetup" android:textColor="#168DE2" android:textSize="16sp"
+		        />
+		</TableRow>
+	</TableLayout>
+	<View
+	    android:id="@+id/divideview2"
+	    android:layout_width="fill_parent" android:layout_height="1dip"
+	    android:background="@color/lightgray" android:layout_below="@+id/memorylayout" android:layout_marginTop="5dip" />
+    <ListView
+        android:id="@+id/instancelist"
+        android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:layout_marginTop="15dip" android:layout_marginLeft="10dip" android:layout_marginRight="10dip"
+        android:layout_below="@+id/divideview2" android:divider="@android:color/transparent"
+ 		android:dividerHeight="10dip" android:scrollbars="none" />
+    <TextView
+        android:id="@+id/norunningtxt"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_below="@+id/divideview2" android:layout_centerHorizontal="true"
+        android:textSize="25sp" android:text="@string/no_runing_insanace"
+        android:visibility="invisible" android:gravity="center" />
+</RelativeLayout>

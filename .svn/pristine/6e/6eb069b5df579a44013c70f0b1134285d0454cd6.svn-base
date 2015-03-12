@@ -1,0 +1,204 @@
+package com.mopaas_mobile.activity;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.DrawerLayout;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.AppLication;
+import com.mopaas_mobile.domain.Message;
+import com.mopaas_mobile.fragment.AppListFragment;
+import com.mopaas_mobile.utils.BadgeView;
+
+public class MainTabActivity extends FragmentActivity implements OnClickListener{
+	
+	SharedPreferences cashedata;
+	public static List<AppLication> applist;
+	public static List<Message> msglist;
+	public static int memoryCount;
+	private static BadgeView unread_tv;
+	private String token,username;
+	private static String unreadnumber;
+	private static int unreadcount;
+	
+	private DrawerLayout drawerLayout;
+	private Button dawerBtn;
+	private TextView userintoTxt,logoutTxt;
+    private FragmentManager fragmentManager; 
+    private AppListFragment applistFragment;
+    private Dialog LogoutDialog;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		setContentView(R.layout.activity_maintab);
+		initView();
+		initDialog();
+		fragmentManager = getSupportFragmentManager();
+		setFragment(0);
+	}
+	private void setFragment(int number)
+	{
+		// 开启一个Fragment事务
+		FragmentTransaction transaction = fragmentManager.beginTransaction();
+		// 先隐藏掉所有的Fragment，以防止有多个Fragment显示在界面上的情况
+//		hideFragments(transaction);
+		switch(number)
+		{
+			case 0:
+				if(applistFragment==null)
+				{
+					applistFragment = new AppListFragment();
+					transaction.add(R.id.contentlayout, applistFragment);
+				}else
+					transaction.show(applistFragment);
+				break;
+		}
+		transaction.commit();
+	}
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+//		if(unreadcount>0)
+//		{
+//			unreadnumber = String.valueOf(unreadcount);
+//			unread_tv.setVisibility(View.VISIBLE);
+//			unread_tv.setText(unreadnumber);
+//		}else
+//			unread_tv.setVisibility(View.INVISIBLE);
+	}
+	private void initView()
+	{
+		cashedata = getSharedPreferences("MoPaaS_mobile", 0);
+		username = cashedata.getString("username", "");
+		drawerLayout = (DrawerLayout)findViewById(R.id.drawerlayout);
+		userintoTxt = (TextView)findViewById(R.id.userinto_txt);
+		userintoTxt.setText(username.substring(0, username.indexOf("@")));
+		dawerBtn = (Button)findViewById(R.id.dawerbtn);
+		logoutTxt = (TextView)findViewById(R.id.logout_txt);
+		dawerBtn.setOnClickListener(this);
+		logoutTxt.setOnClickListener(this);
+	}
+	private void initDialog()
+	{
+		LayoutInflater inflater = getLayoutInflater();
+		View logoutdialogView = inflater.inflate(R.layout.logout_dialog,null);
+		Button logoutsubmitbtn  = (Button)logoutdialogView.findViewById(R.id.savebtn);
+		Button logoutcancelbtn  = (Button)logoutdialogView.findViewById(R.id.cancelbtn);
+		logoutsubmitbtn.setOnClickListener(new OnClickListener() {		
+			@Override
+			public void onClick(View v) {
+				cashedata.edit().clear().commit();
+				Intent logoutint = new Intent();
+				logoutint.setClass(getApplicationContext(), LoginActivity.class);
+				startActivity(logoutint);
+				finish();
+			}
+		});
+		logoutcancelbtn.setOnClickListener(new OnClickListener() {	
+			@Override
+			public void onClick(View v) {
+				LogoutDialog.dismiss();
+			}
+		});
+		LogoutDialog = new Dialog(this, R.style.dialog);
+		LogoutDialog.setContentView(logoutdialogView);
+		LogoutDialog.setCancelable(true);
+	}
+	@Override
+	public void onClick(View view) {
+		switch(view.getId())
+		{
+			case R.id.dawerbtn:
+				if(!drawerLayout.isDrawerOpen(Gravity.LEFT))
+					drawerLayout.openDrawer(Gravity.LEFT);
+				else
+					drawerLayout.closeDrawer(Gravity.LEFT);
+				break;
+			case R.id.logout_txt:
+				cashedata.edit().putString("token", null).commit();
+				cashedata.edit().putString("password", null).commit();
+				LogoutDialog.show();
+				break;
+		}	 
+	}
+	public static Handler readmsgHandler = new Handler()
+	{
+		public void handleMessage(android.os.Message msg) 
+		{
+			if(msg.what==1&&unreadcount>0)
+			{
+				unreadcount--;
+				unread_tv.setVisibility(View.VISIBLE);
+				unread_tv.setText(String.valueOf(unreadcount));
+			}else if(msg.what==10)
+			{
+				unread_tv.setVisibility(View.INVISIBLE);
+			}
+			if(msg.arg1 ==10)
+			{
+			}	
+		};
+	};
+	class MessageTask extends AsyncTask<String,Integer,Map<String,Object>>
+	{
+
+		@Override
+		protected Map<String, Object> doInBackground(String... arg0) {
+			// TODO Auto-generated method stub
+			Map<String,Object> resultmap = null;
+			try {
+				resultmap = MPSbackendApi.getMessages(token, "0", "20");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return resultmap;
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String, Object> resultmap) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(resultmap);
+			if(resultmap.get("returnCode").equals("000"))
+			{
+				msglist = (List<Message>)resultmap.get("list");
+				unreadnumber = (String)resultmap.get("unreadcount");
+				unreadcount = Integer.valueOf(unreadnumber);
+				if(!unreadnumber.equals("0"))
+				{
+					unread_tv.setVisibility(View.VISIBLE);
+					unread_tv.setText(unreadnumber);
+				}
+				else
+					unread_tv.setVisibility(View.INVISIBLE);
+			}
+		}
+	}
+}

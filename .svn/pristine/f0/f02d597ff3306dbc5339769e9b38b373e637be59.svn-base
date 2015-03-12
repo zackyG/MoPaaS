@@ -1,0 +1,192 @@
+package com.mopaas_mobile.api;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+
+import android.util.Log;
+
+import com.mopaas_mobile.config.GlobalConfig;
+import com.mopaas_mobile.config.GlobalConfigV2;
+import com.mopaas_mobile.http.BaseHttpRequester;
+import com.mopaas_mobile.parser.ApplistParser;
+import com.mopaas_mobile.parser.BalanceDetailParser;
+import com.mopaas_mobile.parser.InstancelistParser;
+import com.mopaas_mobile.parser.MessagelistParser;
+import com.mopaas_mobile.parser.OrganizationParser;
+import com.mopaas_mobile.parser.ParserBasic;
+import com.mopaas_mobile.parser.PayListParser;
+import com.mopaas_mobile.parser.ServiceListParser;
+
+//
+// MPSbackendApi.java by Administrator at 下午2:26:33
+//
+// Copyright (c) 2012 anchora,inc
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+public class MPSbackendApi implements GlobalConfigV2{
+	
+	
+	public static Map<String,String> login(String email,String password) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("userEmail", email));
+		params.add(new BasicNameValuePair("userPwd", password));
+		String result = BaseHttpRequester.doPOST(API_LOGIN, params);
+		Map<String,String> valuesmap = new HashMap<String, String>();
+		valuesmap = ParserBasic.loginParse(result);
+		return valuesmap;
+	}
+	public static Map<String,Object> getAppList(String secretkey,String orgGuid,String spaceGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		return ApplistParser.doParse(BaseHttpRequester.doPOST(API_APPLIST, params));
+	}
+//	public static Map<String,String> getQuota(String token,String organizationsGuid) throws IOException, JSONException
+//	{
+//		String urlstr = SERVER_PATH + API_QUOTA;
+//		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+//		params.add(new BasicNameValuePair("organizationsGuid", organizationsGuid));
+//		params.add(new BasicNameValuePair("token", token));
+//		String result = BaseHttpRequester.doGET(urlstr, params);
+//		return ParserBasic.QuotaParse(result);
+//	}
+	public static Map<String,String> requestCountChart(String appGuid,String chartHours) throws IOException, JSONException
+	{
+		String urlstr = SERVER_PATH;
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("appGuid", appGuid));
+		params.add(new BasicNameValuePair("chartHours", chartHours));
+		String result = BaseHttpRequester.doGET(urlstr, params);
+		return ParserBasic.ChartParse(result);
+	}
+	public static Map<String,String> startApp(String secretkey,String name,String spaceGuid,String orgGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("name", name));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		List<String> keylist = new ArrayList<String>();
+		keylist.add("returnCode");
+		keylist.add("returnMessage");
+		return ParserBasic.ParserHelper(BaseHttpRequester.doPOST(API_STARTAPP,params), keylist);
+	}
+	public static Map<String,String> stopApp(String secretkey,String name,String spaceGuid,String orgGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("name", name));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		List<String> keylist = new ArrayList<String>();
+		keylist.add("returnCode");
+		keylist.add("returnMessage");
+		return ParserBasic.ParserHelper(BaseHttpRequester.doPOST(API_STOPAPP,params), keylist);
+	}
+	public static Map<String,Object> getInstance(String secretkey,String name,String spaceGuid,String orgGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("name", name));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		return InstancelistParser.doParse(BaseHttpRequester.doGET(API_GETINSTANCE, params));
+	}
+	public static Map<String,String> modifyApp(String secretkey,String name,String spaceGuid,String orgGuid,String instances,String memory) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		params.add(new BasicNameValuePair("name", name));
+		params.add(new BasicNameValuePair("memory", memory));
+		params.add(new BasicNameValuePair("instances", instances));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		List<String> keylist = new ArrayList<String>();
+		keylist.add("returnCode");
+		keylist.add("returnMessage");
+		return ParserBasic.ParserHelper(BaseHttpRequester.doGET(API_MODIFYAPP, params), keylist);
+	}
+	public static Map<String,Object> getServiceList(String secretkey,String spaceGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		return ServiceListParser.doParse(BaseHttpRequester.doPOST(API_SERVICELIST, params));
+	}
+	public static Map<String,String> deleteService(String secretkey,String spaceGuid,String name,String orgGuid) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		params.add(new BasicNameValuePair("spaceGuid", spaceGuid));
+		params.add(new BasicNameValuePair("name", name));
+		params.add(new BasicNameValuePair("orgGuid", orgGuid));
+		List<String> keylist = new ArrayList<String>();
+		keylist.add("returnCode");
+		keylist.add("returnMessage");
+		return ParserBasic.ParserHelper(BaseHttpRequester.doPOST(API_DELETESVC, params), keylist);
+	}
+	public static Map<String,String> getPaylist(String secretkey) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		return PayListParser.parse(BaseHttpRequester.doPOST(API_GETPAYLIST, params));
+	}
+	public static Map<String,Object> getBalanceDetail(String secretkey) throws IOException, JSONException
+	{
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("secretkey", secretkey));
+		return BalanceDetailParser.parse(BaseHttpRequester.doPOST(API_GETBALANCEDETAIL, params));
+	}
+	public static Map<String,Object> getMessages(String token,String currentPage,String pagesize) throws IOException, JSONException
+	{
+		String urlstr = SERVER_PATH + API_MESSAGELIST;
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("currentPage", currentPage));
+		params.add(new BasicNameValuePair("pagesize", pagesize));
+		String result = BaseHttpRequester.doGETwithHeader(urlstr, token, params);
+		return MessagelistParser.doParse(result);
+	}
+	public static void setMessageRead(String token,String rid) throws IOException, JSONException
+	{
+		String urlstr = SERVER_PATH + API_MESSAGEREAD;
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("rid", rid));
+		BaseHttpRequester.doPOST(urlstr,params);
+	}
+	public static void setPushTags(String deviceId,String tag) throws IOException
+	{
+		String urlstr = PUSHSERVER_PATH + API_PUSH_SETTAG;
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("servicekey", PUSH_SERVICEKEY));
+		params.add(new BasicNameValuePair("deviceId", deviceId));
+		params.add(new BasicNameValuePair("os", "1"));
+		params.add(new BasicNameValuePair("productType", "true"));
+		params.add(new BasicNameValuePair("tag", tag));
+		BaseHttpRequester.doGET(urlstr,params);
+	}
+}

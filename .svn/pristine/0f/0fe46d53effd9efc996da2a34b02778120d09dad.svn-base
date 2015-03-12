@@ -1,0 +1,223 @@
+package com.mopaas_mobile.fragment;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.mopaas_mobile.activity.AppDetailActivity;
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.adapter.ApplistAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.AppLication;
+
+public class AppListFragment extends Fragment {
+
+	SharedPreferences cashedata;
+	private String token,totalMemory,spaceGuid,orgGuid,usedMemory;
+	private List<AppLication> applist;
+	private ApplistAdapter appAdapter;
+	private TextView memoryTxt;
+	private ProgressBar memorybar;
+	private ListView applistview;
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View contentview = inflater.inflate(R.layout.fragment_applist, container,false);
+		return contentview;
+	}
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		initView();
+	}
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if(20==resultCode)  
+		   {   
+			   int itemid = data.getIntExtra("itemid", -1);
+			   applist.get(itemid).state = data.getStringExtra("state");
+			   applist.get(itemid).memory = data.getStringExtra("memory");
+			   applist.get(itemid).instanceNum = String.valueOf(data.getIntExtra("instancenum", 0));
+		       appAdapter.notifyDataSetChanged();
+		   }  
+	}
+	@Override
+	public void onPause() {
+		super.onPause();
+		cashedata.edit().putString("usedMemory", usedMemory).commit();
+	}
+	private void initView()
+	{
+		applistview = (ListView)getActivity().findViewById(R.id.applistview);
+		memoryTxt = (TextView)getActivity().findViewById(R.id.memoryinfo);
+		memorybar = (ProgressBar)getActivity().findViewById(R.id.memorybar);
+		cashedata = getActivity().getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", "");
+		totalMemory = cashedata.getString("memoryLimit", "0");
+		orgGuid = cashedata.getString("orgGuid", "");
+		spaceGuid = cashedata.getString("spaceGuid", "");
+		AppListTask task = new AppListTask();
+		task.execute(token,orgGuid,spaceGuid);
+		
+		applistview.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
+					long arg3) {
+				if(applist.size()>0)
+				{
+					Intent dtlIntent = new Intent();
+					if(applist.size()>1)
+					{
+						int count = Integer.valueOf(totalMemory);
+						count = count - Integer.valueOf(usedMemory) + Integer.valueOf(applist.get(position).memory);
+						dtlIntent.putExtra("totalMemory", String.valueOf(count));
+					}else
+						dtlIntent.putExtra("totalMemory", totalMemory);
+					String appName = applist.get(position).appName;
+					dtlIntent.putExtra("itemid", position);
+					dtlIntent.putExtra("appId", applist.get(position).appID);
+					dtlIntent.putExtra("appImage", applist.get(position).appImage);
+					dtlIntent.putExtra("appMemory", applist.get(position).memory);
+					dtlIntent.putExtra("appState", applist.get(position).state);
+					dtlIntent.putExtra("instanceNum", applist.get(position).instanceNum);
+					dtlIntent.putExtra("appName", appName);
+					dtlIntent.putExtra("appuris", applist.get(position).uris);
+					dtlIntent.setClass(getActivity(), AppDetailActivity.class);
+					startActivityForResult(dtlIntent,100);
+				}
+			}
+		});
+		
+	}
+	public void turnOnApp(String appid,int itemid,boolean isTurnOn)
+	{
+		AppOnOffTask onofftask = new AppOnOffTask();
+		if(isTurnOn)
+			onofftask.execute("start",token,applist.get(itemid).appName,spaceGuid,orgGuid,String.valueOf(itemid));
+		else
+			onofftask.execute("stop",token,applist.get(itemid).appName,spaceGuid,orgGuid,String.valueOf(itemid));
+		
+	}
+	
+	class AppListTask extends AsyncTask<String,Integer,Map<String,Object>>
+	{
+		String returnCode;
+		@Override
+		protected Map<String,Object> doInBackground(String... params) {
+			try {
+				Map<String,Object> resultmap = MPSbackendApi.getAppList(params[0], params[1],params[2]);			
+				returnCode = (String)resultmap.get("returnCode");
+				return resultmap;
+			} catch (IOException e) {
+				e.printStackTrace();
+				returnCode = "-1";
+			} catch (JSONException e) {
+				e.printStackTrace();
+				returnCode = "-1";
+			}
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String, Object> resultmap) {
+			super.onPostExecute(resultmap);
+			if(returnCode.equals("000"))
+			{
+				int usedMemoryCount = 0;
+				if(appAdapter==null)
+				{
+					applist = (List<AppLication>)resultmap.get("list");
+					appAdapter = new ApplistAdapter(AppListFragment.this, applist);
+					applistview.setAdapter(appAdapter);
+				}else
+					appAdapter.notifyDataSetChanged();
+				for(AppLication app:applist)
+				{
+					usedMemoryCount +=Integer.valueOf(app.memory);
+				}
+				usedMemory = String.valueOf(usedMemoryCount);
+				memoryTxt.setText(usedMemory+"M/"+totalMemory+"M");
+				memorybar.setProgress(((100*usedMemoryCount)/Integer.valueOf(totalMemory)));
+			};
+		}
+	}
+	class AppOnOffTask extends AsyncTask<String,Integer,Integer>
+	{
+		String returnMessage = null;
+		@Override
+		protected Integer doInBackground(String... params) {
+			String returnCode=null;
+			if("start".equals(params[0]))
+			{
+				try {
+					Map<String,String> valuesmap = MPSbackendApi.startApp(params[1], params[2],params[3], params[4]);
+					returnCode = valuesmap.get("returnCode");
+					returnMessage = valuesmap.get("returnMessage");
+					if(returnCode.equals("000")) return Integer.valueOf(params[5]);
+					else return -1;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return -1;
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return -1;
+				}
+			}else
+			{
+				try {
+					Map<String,String> valuesmap = MPSbackendApi.stopApp(params[1], params[2],params[3], params[4]);
+					returnCode = valuesmap.get("returnCode");
+					returnMessage = valuesmap.get("returnMessage");
+					if(returnCode.equals("000")) return Integer.valueOf(params[5]);
+					else return -1;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return -1;
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return -1;
+				}
+			}
+		}
+		@Override
+		protected void onPostExecute(Integer itemid) {
+			super.onPostExecute(itemid);
+			if(itemid!=-1)
+			{
+				if(applist.get(itemid).state.contains("STOP"))
+					applist.get(itemid).state="STARTED";
+				else
+					applist.get(itemid).state="STOPPED";
+				
+				Toast.makeText(getActivity(), returnMessage, Toast.LENGTH_LONG).show();
+			}else
+			{
+				if(returnMessage==null)
+					Toast.makeText(getActivity(), R.string.ioexception, Toast.LENGTH_LONG).show();
+				else
+					Toast.makeText(getActivity(), returnMessage, Toast.LENGTH_LONG).show();
+			}
+			appAdapter.notifyDataSetChanged();
+		}
+		
+	}
+}

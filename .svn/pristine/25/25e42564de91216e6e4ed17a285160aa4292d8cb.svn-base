@@ -1,0 +1,107 @@
+package com.mopaas_mobile.fragment;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.adapter.BalanceListAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.crouton.Configuration;
+import com.mopaas_mobile.crouton.Crouton;
+import com.mopaas_mobile.crouton.Style;
+import com.mopaas_mobile.domain.Balance;
+
+
+public class BalanceDetailFragment extends Fragment {
+
+	private static final Style STYLE_ALERT = new Style.Builder().
+		    setBackgroundColorValue(Style.holoRedLight).setTextSize(20).build();
+	private SharedPreferences cashedata; 
+	private String token;
+	private ListView balancelistview;
+	private TextView blclistcautionTxt;
+	private BalanceListAdapter adapter;
+	private  ArrayList<Balance> balancelist;
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View contentview = inflater.inflate(R.layout.fragment_balancedetail, container,false);
+		return contentview;
+	};
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		initView();
+		cashedata = getActivity().getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", "");
+		BalanceDetailTask task = new BalanceDetailTask();
+		task.execute(token);
+	}
+	private void initView()
+	{
+		balancelistview = (ListView)getActivity().findViewById(R.id.balancelist);
+		blclistcautionTxt = (TextView)getActivity().findViewById(R.id.blclistcaution);
+	}
+	private void showCrouton(String croutonText, Style croutonStyle, Configuration configuration) {
+	    final Crouton crouton;
+	    crouton = Crouton.makeText(getActivity(), croutonText, croutonStyle);
+	    crouton.setConfiguration( configuration).show();
+	  }
+	class BalanceDetailTask extends AsyncTask<String,String,Map<String,Object>>
+	{
+
+		@Override
+		protected Map<String, Object> doInBackground(String... params) {
+			try {
+				return MPSbackendApi.getBalanceDetail(params[0]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String, Object> result) {
+			super.onPostExecute(result);
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					balancelist = (ArrayList<Balance>)result.get("list");
+					if(balancelist.size()>0)
+					{
+						blclistcautionTxt.setVisibility(View.GONE);
+						if(adapter==null)
+						{
+							adapter = new BalanceListAdapter(getActivity(), balancelist);
+							balancelistview.setAdapter(adapter);
+						}else
+						{
+							balancelist.addAll((ArrayList<Balance>)result.get("list"));
+							adapter.notifyDataSetChanged();
+						}
+					}else
+						blclistcautionTxt.setVisibility(View.VISIBLE);
+				}else
+					showCrouton(getString(R.string.delete_error),STYLE_ALERT, Configuration.DEFAULT);
+			}else
+				showCrouton(getString(R.string.ioexception),STYLE_ALERT, Configuration.DEFAULT);
+		}
+	}
+}

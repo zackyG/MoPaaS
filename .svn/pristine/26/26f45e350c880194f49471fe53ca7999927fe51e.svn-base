@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <com.mopaas_mobile.pulltorefresh.ptr.PtrClassicFrameLayout
+        android:id="@+id/rotate_header_blclistview_frame"
+        xmlns:cube_ptr="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        cube_ptr:ptr_keep_header_when_refresh="true"
+        cube_ptr:ptr_pull_to_fresh="false"
+        cube_ptr:ptr_ratio_of_header_height_to_refresh="1.2"
+        cube_ptr:ptr_resistance="1.7">
+	    <ListView
+	        android:id="@+id/balancelist"
+	        android:layout_width="match_parent"
+	    	android:layout_height="match_parent"
+	        />
+    </com.mopaas_mobile.pulltorefresh.ptr.PtrClassicFrameLayout>
+	<TextView
+		android:id="@+id/blclistcaution"
+		android:layout_width="wrap_content" 
+		android:layout_height="wrap_content"
+		android:layout_gravity="center" 
+		android:textColor="@color/black"
+		android:textSize="20sp" 
+		android:text="@string/no_paydata" 
+		android:visibility="gone"
+		/>
+</FrameLayout>

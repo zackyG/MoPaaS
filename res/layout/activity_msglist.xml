@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical" >
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:background="@drawable/tabbar_background"
+        >
+        <TextView
+            android:id="@+id/titletv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dip"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:text="@string/messagelist"
+         	android:gravity="center_vertical"
+            />
+        <Button
+            android:id="@+id/button"
+            android:layout_width="80dip"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="20dip"
+            android:paddingTop="3dip"
+            android:paddingBottom="3dip"
+            android:background="@drawable/savebtn"
+            android:text="@string/readall"
+            />
+    </RelativeLayout>
+	<com.mopaas_mobile.utils.XListView
+	    android:id="@+id/msglist"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:background="@color/white"
+	    ></com.mopaas_mobile.utils.XListView>
+</LinearLayout>

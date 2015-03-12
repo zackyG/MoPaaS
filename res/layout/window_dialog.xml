@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/corner"
+    android:padding="10dip" >
+    <TextView
+        android:id="@+id/dialogtitle" android:layout_marginTop="10dip"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" android:layout_centerHorizontal="true"
+        android:textSize="25sp" android:textColor="@color/black" android:text="@string/appmemorysetup" />
+	    <TextView
+	        android:id="@+id/instancememtxt" android:text="@string/instancemem"
+	        android:layout_width="wrap_content" android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true" android:layout_marginTop="10dip" 
+	        android:layout_marginLeft="5dip" android:layout_below="@+id/dialogtitle"/>
+   	<RelativeLayout
+        android:id="@+id/memlayout"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_below="@+id/instancememtxt" android:layout_alignParentLeft="true"
+        android:layout_marginTop="5dip" android:layout_centerHorizontal="true" >
+        <Button
+	        android:id="@+id/downmemory" android:layout_alignParentTop="true"
+	        android:layout_width="50dip" android:layout_height="30dip"
+	        android:layout_alignParentRight="true" android:background="#0d86dd"
+	        android:text="-"  android:textSize="20sp" android:textColor="@color/white"
+	        />
+	    <Button
+	        android:id="@+id/upmemory"
+	        android:layout_width="50dip" android:layout_height="30dip"
+	        android:layout_toLeftOf="@+id/downmemory" android:layout_alignBottom="@+id/downmemory"
+	        android:layout_marginRight="5dip" android:background="#0d86dd"
+	        android:text="+" android:textColor="@color/white" android:textSize="20sp"
+	        />
+        <ProgressBar
+			android:id="@+id/instmemorybar" android:indeterminate="false"
+			style="@style/progressbarStyle_Horizontal_blue" android:layout_toLeftOf="@+id/upmemory"
+			android:layout_width="fill_parent" android:layout_height="30dip"
+			android:layout_alignParentLeft="true" android:layout_marginRight="5dip" />
+    </RelativeLayout>
+    <TextView
+        android:id="@+id/instnumbertxt" android:text="@string/instnumber"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_below="@+id/memlayout" android:layout_marginLeft="5dip" android:layout_marginTop="10dip" />
+    
+   	<RelativeLayout
+        android:id="@+id/numlayout" android:layout_below="@+id/instnumbertxt"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true" android:layout_centerHorizontal="true" android:layout_marginTop="5dip">
+        <Button
+	        android:id="@+id/downnumber" android:layout_alignParentRight="true"
+	        android:layout_width="50dip" android:layout_height="30dip"
+	        android:background="#0d86dd" android:textColor="@color/white"
+	        android:text="-" android:textSize="20sp" />
+	    <Button
+	        android:id="@+id/upnumber" android:background="#0d86dd"
+	        android:layout_width="50dip" android:layout_height="30dip" android:layout_marginRight="5dip"
+	        android:layout_toLeftOf="@+id/downnumber" android:layout_alignBottom="@+id/downnumber"
+	        android:text="+" android:textColor="@color/white" android:textSize="20sp" />
+	    
+	    <ProgressBar
+			android:id="@+id/instnumberbar" style="@style/progressbarStyle_Horizontal_blue"
+			android:layout_width="fill_parent" android:layout_height="30dip"
+			android:layout_alignParentLeft="true" android:indeterminate="false"
+			android:layout_toLeftOf="@+id/upnumber" android:layout_alignBottom="@+id/upnumber" 
+			android:layout_marginRight="5dip"/>
+	</RelativeLayout>
+	<View
+	    android:id="@+id/borderview"  android:background="#d9d9d9"
+	    android:layout_width="fill_parent" android:layout_height="1dip"
+	    android:layout_below="@+id/numlayout" android:layout_marginTop="10dip" />
+	<LinearLayout
+	    android:layout_width="fill_parent" android:layout_height="50dip" 
+	    android:layout_below="@+id/borderview" android:orientation="horizontal"
+	    android:gravity="center_vertical">
+	    <Button
+		    android:id="@+id/cancelbtn" android:layout_weight="1"
+		    android:layout_width="fill_parent" android:layout_height="wrap_content" android:background="@color/white"
+		    android:textSize="20sp" android:textColor="#0d86dd" android:text="@string/cancel" />
+	    <View
+	        android:id="@+id/middleline" android:background="#d9d9d9" 
+	        android:layout_width="1dip" android:layout_height="fill_parent" />
+		<Button
+		    android:id="@+id/savebtn" android:layout_weight="1"
+		    android:layout_width="fill_parent" android:layout_height="wrap_content" android:background="@color/white"
+		    android:textSize="20sp" android:textColor="#0d86dd" android:text="@string/save" />
+		
+	</LinearLayout>
+</RelativeLayout>

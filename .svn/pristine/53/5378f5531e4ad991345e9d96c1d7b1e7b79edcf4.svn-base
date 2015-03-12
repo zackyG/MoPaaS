@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
+    android:paddingTop="10dip"
+    android:paddingBottom="10dip"
+    >
+    <ImageView
+        android:id="@+id/appicon"
+        android:layout_width="@dimen/appicon_width"
+        android:layout_height="@dimen/appicon_height"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        />
+	<ImageButton
+	    android:id="@+id/appbutton"
+	    android:layout_width="76dip" android:layout_height="38dip"
+	    android:layout_centerVertical="true"  android:layout_alignParentRight="true"
+	    android:background="@drawable/switcoff"
+	    />
+	<TextView
+	    android:id="@+id/appname"
+	    android:layout_width="wrap_content" android:layout_height="wrap_content"
+	    android:textSize="20sp" android:textStyle="bold" android:textColor="@color/black"
+	    android:layout_toRightOf="@+id/appicon" android:layout_alignTop="@+id/appicon" />
+	<TextView
+	    android:id="@+id/appinfo"
+	    android:layout_width="wrap_content" android:layout_height="wrap_content"
+	    android:textSize="20sp" android:textColor="#929292"
+	    android:layout_toRightOf="@+id/appicon" android:layout_below="@+id/appname"/>
+</RelativeLayout>

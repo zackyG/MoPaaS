@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    >
+                <TextView
+					android:id="@+id/memory" android:text="@string/memory"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_alignParentLeft="true" android:layout_marginTop="15dip" android:layout_marginLeft="23dip"
+					android:textColor="@color/black" android:textSize="20sp" />
+                <TextView
+					android:id="@+id/memoryinfo"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_alignParentRight="true" android:layout_alignBottom="@+id/memory"
+					android:layout_marginTop="15dip" android:layout_marginRight="23dip"
+					android:textColor="@color/black" android:textSize="20sp" />
+				<RelativeLayout
+				    android:id="@+id/memorylayout" android:layout_below="@+id/memory"
+				    android:layout_width="fill_parent" android:layout_height="wrap_content"
+				    android:layout_marginLeft="23dip" android:layout_marginRight="23dip" android:layout_marginTop="15dip">
+					<ProgressBar
+						android:id="@+id/memorybar" style="@style/progressbarStyle_Horizontal_blue"
+						android:layout_width="fill_parent" android:layout_height="20dip" android:indeterminate="false"
+						android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+					<TextView
+					    android:id="@+id/border2" android:background="@drawable/textview_border"
+					    android:layout_width="fill_parent" android:layout_height="wrap_content"
+					    android:layout_alignTop="@+id/memorybar" android:layout_alignBottom="@+id/memorybar" />
+				</RelativeLayout>
+				<View
+				    android:id="@+id/applistborder" android:background="#d9d9d9"
+				    android:layout_width="fill_parent" android:layout_height="1dip"
+				    android:layout_marginTop="13dip" android:layout_below="@+id/memorylayout" />
+			    <ListView
+			        android:id="@+id/applistview" android:layout_below="@+id/applistborder"
+			        android:layout_width="fill_parent" android:layout_height="match_parent"
+			        android:layout_marginLeft="10dip" android:layout_marginRight="10dip" />
+</RelativeLayout>

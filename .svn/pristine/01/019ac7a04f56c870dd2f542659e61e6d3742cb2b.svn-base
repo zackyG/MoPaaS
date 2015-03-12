@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PullActivateLayout">
+        <attr name="actionViewId" format="reference" />
+        <attr name="toolViewId" format="reference" />
+    </declare-styleable>
+    <declare-styleable name="SlideView">
+         <attr name="hostOffset" format="dimension"></attr>
+     </declare-styleable>
+</resources>

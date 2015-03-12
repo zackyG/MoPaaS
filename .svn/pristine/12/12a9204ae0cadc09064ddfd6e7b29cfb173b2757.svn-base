@@ -1,0 +1,109 @@
+package com.mopaas_mobile.fragment;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.json.JSONException;
+
+import com.mopaas_mobile.activity.R;
+import com.mopaas_mobile.adapter.SvcListAdapter;
+import com.mopaas_mobile.api.MPSbackendApi;
+import com.mopaas_mobile.domain.SerVice;
+
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+public class ServiceListFragment extends Fragment {
+
+	private SharedPreferences cashedata; 
+	private String token;
+	private String spaceGuid;
+	private String usedMemory;
+	private String totalMemory;
+	private TextView memoryTxt;
+	private ProgressBar memorybar;
+	private ListView svcListView;
+	private SvcListAdapter adapter; 
+	private ArrayList<SerVice> svclist; 
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View contentview = inflater.inflate(R.layout.fragment_servicelist, container,false);
+		return contentview;
+	}
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		initView();
+		GetListTask task = new GetListTask();
+		task.execute(token,spaceGuid);
+	}
+	
+	private void initView()
+	{
+		memoryTxt = (TextView)getActivity().findViewById(R.id.svcmemoryinfo);
+		memorybar = (ProgressBar)getActivity().findViewById(R.id.svcmemorybar);
+		svcListView = (ListView)getActivity().findViewById(R.id.svclistview);
+		cashedata = getActivity().getSharedPreferences("MoPaaS_mobile", 0);
+		token = cashedata.getString("token", "");
+		spaceGuid = cashedata.getString("spaceGuid", "");
+		totalMemory = cashedata.getString("memoryLimit", "0");
+		usedMemory = cashedata.getString("usedMemory", "0");
+		memoryTxt.setText(usedMemory+"M/"+totalMemory+"M");
+		memorybar.setProgress(((100*Integer.valueOf(usedMemory))/Integer.valueOf(totalMemory)));
+		
+	}
+	public void notifyListData(ArrayList<SerVice> list)
+	{
+		svclist = list;
+		if(adapter!=null)adapter.notifyDataSetChanged(); 
+	}
+	class GetListTask extends AsyncTask<String,String,Map<String,Object>>
+	{
+
+		@Override
+		protected Map<String,Object> doInBackground(String... params) {
+			try {
+				return MPSbackendApi.getServiceList(params[0], params[1]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		protected void onPostExecute(Map<String,Object> result) {
+			super.onPostExecute(result);
+			if(result!=null)
+			{
+				if("000".equals(result.get("returnCode")))
+				{
+					svclist = (ArrayList<SerVice>)result.get("list");
+					if(adapter==null)
+					{
+						adapter = new SvcListAdapter(ServiceListFragment.this, svclist);
+						svcListView.setAdapter(adapter);
+					}else
+						adapter.notifyDataSetChanged();
+				}
+			}
+		}
+	}
+}

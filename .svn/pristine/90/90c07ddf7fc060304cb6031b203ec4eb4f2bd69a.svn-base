@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"   
+  		android:layout_width="fill_parent" android:layout_height="fill_parent"
+  		android:background="@drawable/frame_full" android:stretchColumns="1,3">
+  		<TableRow android:layout_weight="1"
+  		    android:layout_width="fill_parent" android:layout_height="wrap_content">
+  		    <TextView
+            	android:text="@string/shilihao" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/instancenum_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+	        <TextView
+	            android:text="@string/zhuangtai" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/state_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+  	    </TableRow>
+  	    <TableRow android:layout_weight="1"
+  		    android:layout_width="fill_parent" android:layout_height="wrap_content">
+        	<TextView
+            android:text="@string/shijian" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/time_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+	        <TextView
+	            android:text="@string/cpu" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/cpu_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+        </TableRow>	
+        <TableRow android:layout_weight="1"
+  		    android:layout_width="fill_parent" android:layout_height="wrap_content">
+	        <TextView
+            	android:text="@string/neicun" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/memory_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+	        <TextView
+	            android:text="@string/yingpan" android:textColor="#8F8F8F" android:textSize="20sp" />
+	        <TextView
+	            android:id="@+id/disk_txt"
+	            android:textColor="@color/black" android:textSize="20sp" />
+	    </TableRow>
+</TableLayout>

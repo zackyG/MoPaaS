@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout
+	    xmlns:android="http://schemas.android.com/apk/res/android"
+	    xmlns:tools="http://schemas.android.com/tools"  
+        android:id="@+id/drawerlayout"   
+        android:layout_width="match_parent"  
+        android:layout_height="match_parent"  >  
+        <LinearLayout 
+            android:layout_width="match_parent"  
+        	android:layout_height="match_parent"
+        	android:orientation="vertical" >
+            <RelativeLayout
+                android:background="#0d86dd"
+                android:layout_width="match_parent" 
+                android:layout_height="@dimen/drawer_tltle_height" >
+				<Button
+                    android:id="@+id/dawerbtn" 
+                    android:layout_marginLeft="8dp"
+                    android:layout_width="44dp" 
+                    android:layout_height="44dp" 
+                    android:background="@drawable/icon_push"
+                    android:layout_alignParentLeft="true" 
+                    android:layout_centerVertical="true" />
+				<TextView
+                    android:id="@+id/frameheadtext" 
+                    android:layout_centerInParent="true"
+                    android:layout_width="wrap_content" 
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/drawer_tltle_textSize" />
+            </RelativeLayout>
+             <FrameLayout  
+	            android:id="@+id/contentlayout"  
+	            android:layout_width="match_parent"  
+	            android:layout_height="match_parent" >
+        	 </FrameLayout>  
+        </LinearLayout> 
+  		<LinearLayout
+	        android:id="@+id/leftlayout"  
+	        android:layout_width="@dimen/drawer_leftlayout_width"  
+	        android:layout_height="match_parent"  
+	        android:layout_gravity="left"
+	        android:orientation="vertical"  
+	        android:background="#0d86dd">  
+	        <TextView
+	            android:id="@+id/userinto_txt"
+	            android:layout_width="match_parent" 
+	            android:layout_height="@dimen/drawer_tltle_height"
+	            android:textSize="@dimen/drawer_menu_textSize"
+	            android:textColor="@android:color/white"
+	            android:gravity="center"
+	            android:background="@drawable/whitebottom_border"
+	            />
+	        <TextView
+	            android:id="@+id/applist_txt"
+	            android:layout_width="match_parent" 
+	            android:layout_height="wrap_content"
+	            android:text="@string/applist"
+	            android:textSize="@dimen/drawer_menu_textSize"
+	            android:textColor="@android:color/white"
+	            android:paddingTop="@dimen/drawer_txt_paddingTop"
+	            android:paddingLeft="@dimen/drawer_txt_paddingLeft" 
+	            android:paddingBottom="@dimen/drawer_txt_paddingBottom" 
+	            android:drawablePadding="@dimen/drawer_txt_drawablePadding"
+	            android:gravity="center_vertical"
+	            android:drawableLeft="@drawable/yy_800" 
+	            android:background="@drawable/whitebottom_border"
+	            />
+	        <TextView
+	            android:id="@+id/svclist_txt"
+	            android:layout_width="match_parent" 
+	            android:layout_height="wrap_content"
+	            android:text="@string/svclist"
+	            android:textSize="@dimen/drawer_menu_textSize"
+	            android:textColor="@android:color/white"
+	            android:paddingTop="@dimen/drawer_txt_paddingTop"
+	            android:paddingLeft="@dimen/drawer_txt_paddingLeft" 
+	            android:paddingBottom="@dimen/drawer_txt_paddingBottom" 
+	            android:drawablePadding="@dimen/drawer_txt_drawablePadding"
+	            android:gravity="center_vertical"
+	            android:drawableLeft="@drawable/yy_800" 
+	            android:background="@drawable/whitebottom_border"
+	            />
+	          <TextView
+	            android:id="@+id/logout_txt"
+	            android:layout_width="match_parent" 
+	            android:layout_height="wrap_content"
+	            android:text="@string/quit"
+	            android:textSize="@dimen/drawer_menu_textSize"
+	            android:textColor="@android:color/white"
+	            android:paddingTop="@dimen/drawer_txt_paddingTop"
+	            android:paddingLeft="@dimen/drawer_txt_paddingLeft" 
+	            android:paddingBottom="@dimen/drawer_txt_paddingBottom" 
+	            android:drawablePadding="@dimen/drawer_txt_drawablePadding"
+	            android:gravity="center_vertical"
+	            android:drawableLeft="@drawable/tc_800"
+	            android:background="@drawable/whitebottom_border"
+	            />         
+    </LinearLayout> 
+</android.support.v4.widget.DrawerLayout> 
